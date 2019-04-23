@@ -15,14 +15,43 @@ protocol TabbarInteractable {
 extension TabbarInteractable where Self: UIViewController {
     func replaceSwappableImageViews(with newView: UIView, and viewSize: CGSize) {
         newView.isUserInteractionEnabled = false
-        guard let parentController = self.parent as? UITabBarController else { return }
-        let controllerIndex =  parentController.children.firstIndex(of: self)!
-        var tabBarButtons = parentController.tabBar.subviews.filter({
+        
+        //find ViewController's nearest UITabBarController
+        var parentController = self.parent
+        while !(parentController is UITabBarController) {
+            if parentController?.parent == nil { return }
+            parentController = parentController?.parent
+        }
+        let tabbarControlelr = parentController as! UITabBarController
+        
+        // using bfs to find ViewController's index in UITabBarController
+        var controllerIndex = -1
+        findControllerIndexLoop: for (i, child) in tabbarControlelr.children.enumerated() {
+            var stack = [child]
+            while stack.count > 0 {
+                let count = stack.count
+                for j in stride(from: 0, to: count, by: 1) {
+                    if stack[j] is Self {
+                        controllerIndex = i
+                        break findControllerIndexLoop
+                    }
+                    for vc in stack[j].children {
+                        stack.append(vc)
+                    }
+                }
+                for _ in 1...count {
+                    stack.remove(at: 0)
+                }
+            }
+        }
+        if controllerIndex == -1 { return }
+        
+        var tabBarButtons = tabbarControlelr.tabBar.subviews.filter({
             type(of: $0).description().isEqual("UITabBarButton")
         })
-        guard !tabBarButtons.isEmpty else {
-            return
-        }
+        
+        guard !tabBarButtons.isEmpty else { return }
+        
         let tabBarButton = tabBarButtons[controllerIndex]
         let swappableImageViews = tabBarButton.subviews.filter({
             type(of: $0).description().isEqual("UITabBarSwappableImageView")
