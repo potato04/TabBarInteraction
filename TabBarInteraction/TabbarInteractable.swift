@@ -22,31 +22,29 @@ extension TabbarInteractable where Self: UIViewController {
             if parentController?.parent == nil { return }
             parentController = parentController?.parent
         }
-        let tabbarControlelr = parentController as! UITabBarController
+        let tabbarController = parentController as! UITabBarController
         
         // using bfs to find ViewController's index in UITabBarController
         var controllerIndex = -1
-        findControllerIndexLoop: for (i, child) in tabbarControlelr.children.enumerated() {
-            var stack = [child]
-            while stack.count > 0 {
-                let count = stack.count
+        findControllerIndexLoop: for (i, child) in tabbarController.children.enumerated() {
+            var queue = [child]
+            while queue.count > 0 {
+                let count = queue.count
                 for j in stride(from: 0, to: count, by: 1) {
-                    if stack[j] is Self {
+                    if queue[j] is Self {
                         controllerIndex = i
                         break findControllerIndexLoop
                     }
-                    for vc in stack[j].children {
-                        stack.append(vc)
+                    for vc in queue[j].children {
+                        queue.append(vc)
                     }
                 }
-                for _ in 1...count {
-                    stack.remove(at: 0)
-                }
+                queue.removeSubrange(0...count-1)
             }
         }
         if controllerIndex == -1 { return }
         
-        var tabBarButtons = tabbarControlelr.tabBar.subviews.filter({
+        var tabBarButtons = tabbarController.tabBar.subviews.filter({
             type(of: $0).description().isEqual("UITabBarButton")
         })
         
