@@ -29,17 +29,14 @@ extension TabbarInteractable where Self: UIViewController {
         findControllerIndexLoop: for (i, child) in tabbarController.children.enumerated() {
             var queue = [child]
             while queue.count > 0 {
-                let count = queue.count
-                for j in stride(from: 0, to: count, by: 1) {
-                    if queue[j] is Self {
-                        controllerIndex = i
-                        break findControllerIndexLoop
-                    }
-                    for vc in queue[j].children {
-                        queue.append(vc)
-                    }
+                let controller = queue.removeFirst()
+                if controller is Self {
+                    controllerIndex = i
+                    break findControllerIndexLoop
                 }
-                queue.removeSubrange(0...count-1)
+                for vc in controller.children {
+                    queue.append(vc)
+                }
             }
         }
         if controllerIndex == -1 { return }
